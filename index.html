@@ -25,7 +25,8 @@ button{width:100%;margin-top:14px;padding:18px;font-family:var(--mono);font-size
 button:hover{background:var(--btnh)} button:active{background:var(--fg);color:var(--bg)}
 button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 #msg{margin-top:14px;border:1px solid var(--line);background:#060d08;padding:11px;font-size:13px;line-height:1.5}
-.foot{color:var(--dim);font-size:11px;margin-top:14px;border-top:1px solid var(--line);padding-top:9px;line-height:1.5}
+.hid{display:none}
+.hid.on{display:block;width:100%;margin-top:14px;padding:12px;font-family:var(--mono);font-size:20px;letter-spacing:8px;text-align:center;background:#060d08;color:var(--fg);border:1px solid var(--fg)}
 .lost{--fg:#ff7a68;--line:#4a1c16;--panel:#1a0b09;--bg:#140605;--btn:#2b0f0c;--btnh:#3d1511;--dim:#a35a4e}
 </style></head><body>
 <div class="wrap">
@@ -40,7 +41,7 @@ button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     <button id="b">Провести сеанс связи</button>
   </div>
   <div id="msg">Смена начата. Сеанс связи проводится не реже одного раза в десять минут.</div>
-  <div class="foot">Сброс для Секретариата: три касания заголовка.</div>
+  <input id="k" class="hid" inputmode="numeric" maxlength="4" autocomplete="off" aria-hidden="true">
 </div>
 <script>
 (function(){
@@ -68,11 +69,19 @@ button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     if(S.lost)return;
     S.at=Date.now();save();draw();
   };
-  var c=0,tm=0;
-  document.querySelector('h1').onclick=function(){
-    clearTimeout(tm);c++;tm=setTimeout(function(){c=0},900);
-    if(c>=3){c=0;S={at:Date.now(),lost:false};save();draw();document.getElementById('msg').textContent='Терминал сброшен.';}
-  };
+  // сброс: удержать заголовок 6 секунд, затем ввести код
+  var hold=0,k=document.getElementById('k'),h1=document.querySelector('h1');
+  function armed(){k.classList.add('on');k.value='';k.focus();}
+  function disarm(){k.classList.remove('on');k.value='';k.blur();}
+  h1.addEventListener('pointerdown',function(){clearTimeout(hold);hold=setTimeout(armed,6000);});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(e){h1.addEventListener(e,function(){clearTimeout(hold);});});
+  h1.addEventListener('contextmenu',function(e){e.preventDefault();});
+  k.addEventListener('input',function(){
+    if(k.value.length<4)return;
+    if(k.value==='1967'){S={at:Date.now(),lost:false};save();draw();document.getElementById('msg').textContent='Смена начата заново.';}
+    disarm();
+  });
+  k.addEventListener('blur',disarm);
   draw();setInterval(draw,500);
 })();
 </script></body></html>
